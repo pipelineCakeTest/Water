@@ -4,7 +4,8 @@ name: CI
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
-on:
+on: 
+  workflow_dispatch:
   push:
     branches:
     - '!zlib'
@@ -25,14 +26,18 @@ jobs:
         run: |
           content=`cat ./actions.json`
           echo "::set-output name=matrix::$content"
+      - name: Test parsed JSON
+        run: |
+          echo "${{fromJson(steps.set-matrix.outputs.matrix).test.conanfile}}"
 
   build:
-    name: ${{ matrix.build.lables }}
+    name: ${{ matrix.labels }}
     needs: generate-matrix
     strategy:
       fail-fast: true
-      matrix: ${{fromJson(needs.generate-matrix.outputs.matrix)}}
-    runs-on: ${{ matrix.build.lables }}
+      matrix:
+        labels: ${{fromJson(needs.generate-matrix.outputs.matrix).build.labels}}
+    runs-on: ${{ matrix.labels }}
     steps:
     - name: Setup Python
       uses: actions/setup-python@v2
