@@ -1,0 +1,44 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches:
+    - '!zlib'
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  generate-matrix:
+    name: Generate matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2    
+      - name: Set matrix for build
+        id: set-matrix
+        run: |
+          content=`cat ./actions.json`
+          echo "::set-output name=matrix::$content"
+
+  build:
+    name: ${{ matrix.build.lables }}
+    needs: generate-matrix
+    strategy:
+      fail-fast: true
+      matrix: ${{fromJson(needs.generate-matrix.outputs.matrix)}}
+    runs-on: ${{ matrix.build.lables }}
+    steps:
+    - name: Setup Python
+      uses: actions/setup-python@v2
+    - name: Install Conan
+      run: pip install conan
+    - name: Checkout
+      uses: actions/checkout@v2.3.1
+    - name: Build
+      run: conan create .
