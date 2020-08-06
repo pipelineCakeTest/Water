@@ -1,0 +1,15 @@
+
+{
+    "build": {
+        "conanfile": ".",
+        "labels": [
+            "ubuntu-latest"
+        ]
+    },
+    "test": {
+        "conanfile": "test_conanfiles.py",
+        "labels": [
+            "ubuntu-latest"
+        ]
+    }
+}
