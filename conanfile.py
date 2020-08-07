@@ -3,9 +3,9 @@ from conans import ConanFile, CMake, tools
 import os
 
 class PipelineJobXConan(ConanFile):
-    name = test
+    name = "test"
     user = "aev25"
-    version = 0.1.0
+    version = "0.1.0"
     channel = "stable"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False]}
