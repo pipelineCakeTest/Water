@@ -27,9 +27,8 @@ jobs:
       run: |
         content=`cat ./actions.json`
         content="${content//'%'/'%25'}"
-        content="${content//$'
-'/'%0A'}"
-        content="${content//$''/'%0D'}"
+        content="${content//$'\n'/'%0A'}"
+        content="${content//$'\r'/'%0D'}"
         echo "::set-output name=build_agents::$content"
     - name: Print Var
       run: |
