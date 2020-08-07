@@ -1,14 +1,9 @@
 {
     "include": [
         {
-            "project": "foo",
-            "config": "Debug",
-            "run-on": "ubuntu-latest"
-        },
-        {
             "project": "bar",
             "config": "Release",
-            "run-on": "ubuntu-latest"
+            "run-on": ["self-hosted", "windows"]
         }
     ]
 }

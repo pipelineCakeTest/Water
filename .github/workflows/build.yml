@@ -39,10 +39,17 @@ jobs:
       matrix: ${{fromJson(needs.generate-matrix.outputs.build_agents)}}
     runs-on: ${{ matrix.run-on }}
     steps:
+    #- name: Install Conan Local Machine
+    #  if: ${{contains( matrix.run-on, 'self-hosted' )}}
+    #  env:
+    #    CIP_USER: ${{ secrets.CIP_USER }}
+    #    CIP_PWD: ${{ secrets.CIP_PASSWORD }}
+    #  run: "pip install conan --proxy=http://$env:CIP_USER:$env:CIP_PWD@proxy.in.audi.vwg:8080"
     - name: Setup Python
+      if: ${{!contains( matrix.run-on, 'self-hosted' )}}
       uses: actions/setup-python@v2
     - name: Install Conan
-      run: pip install conan
+      run: "pip install conan"
     - name: Checkout
       uses: actions/checkout@v2.3.1
     - name: Build
