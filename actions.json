@@ -1,9 +1,11 @@
 {
     "include": [
         {
-            "project": "bar",
-            "config": "Release",
-            "run-on": ["self-hosted", "windows"]
+            "conanfile": "conanfile.py",
+            "run-on": [
+                "self-hosted",
+                "windows"
+            ]
         }
     ]
 }

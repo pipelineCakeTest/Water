@@ -20,37 +20,59 @@ jobs:
     outputs:
       build_agents: ${{ steps.set_var.outputs.build_agents }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2.3.1
-    - name: Set Var
-      id: set_var
-      run: |
-        content=`cat ./actions.json`
-        content="${content//'%'/'%25'}"
-        content="${content//$'\n'/'%0A'}"
-        content="${content//$'\r'/'%0D'}"
-        echo "::set-output name=build_agents::$content"
-    - name: Print Var
-      run: |
-        echo "${{toJson(fromJson(steps.set_var.outputs.build_agents))}}"
+      - name: Checkout
+        uses: actions/checkout@v2.3.1
+      - name: Set Var
+        id: set_var
+        run: |
+          content=`cat ./actions.json`
+          content="${content//'%'/'%25'}"
+          content="${content//$'
+'/'%0A'}"
+          content="${content//$''/'%0D'}"
+          echo "::set-output name=build_agents::$content"
+      - name: Print Var
+        run: |
+          echo "${{toJson(fromJson(steps.set_var.outputs.build_agents))}}"
   build:
+    name: "Labels: ${{ join(matrix.run-on, ', ') }}"
+    env:
+      JOB_NAME: ${{ github.repository }}
+      BUILD_NUMBER: ${{ github.run_number }}
+      CONAN_USER_HOME: ${{ github.workspace }}
+      CONANFILE: ${{ matrix.conanfile }}
     needs: generate-matrix
     strategy:
       matrix: ${{fromJson(needs.generate-matrix.outputs.build_agents)}}
     runs-on: ${{ matrix.run-on }}
     steps:
-    #- name: Install Conan Local Machine
-    #  if: ${{contains( matrix.run-on, 'self-hosted' )}}
-    #  env:
-    #    CIP_USER: ${{ secrets.CIP_USER }}
-    #    CIP_PWD: ${{ secrets.CIP_PASSWORD }}
-    #  run: "pip install conan --proxy=http://$env:CIP_USER:$env:CIP_PWD@proxy.in.audi.vwg:8080"
-    - name: Setup Python
-      if: ${{!contains( matrix.run-on, 'self-hosted' )}}
-      uses: actions/setup-python@v2
-    - name: Install Conan
-      run: "pip install conan"
-    - name: Checkout
-      uses: actions/checkout@v2.3.1
-    - name: Build
-      run: conan create .
+      - name: Add Mask
+        run: echo "::add-mask::password123"
+      - name: Debug Message
+        run: echo "::debug::Create a secret ACTIONS_STEP_DEBUG=true, to enable debuging"
+      - name: Install Conan Local Machine
+        if: ${{contains( matrix.run-on, 'self-hosted' )}}
+        env:
+          CIP_USER: ${{ secrets.CIP_USER }}
+          CIP_PWD: ${{ secrets.CIP_PASSWORD }}
+        run: "pip install conan --proxy=http://$env:CIP_USER:$env:CIP_PWD@proxy.in.audi.vwg:8080"
+        continue-on-error: true
+      - name: Setup Python
+        if: ${{!contains( matrix.run-on, 'self-hosted' )}}
+        uses: actions/setup-python@v2
+        continue-on-error: true
+      - name: Config Conan
+        run: |
+          conan remote add conan_local http://127.0.0.1:8040/artifactory/api/conan/conan-releases -i 0 -f
+          conan user -p password123 -r conan_local admin
+        continue-on-error: true
+      - name: get-cmake
+        uses: lukka/get-cmake@v3.18.0
+        continue-on-error: true
+      - name: Checkout
+        uses: actions/checkout@v2.3.1
+      - name: Build
+        run: |
+          echo "$env:JOB_NAME #$env:BUILD_NUMBER"
+          conan create "$env:CONANFILE"
+
