@@ -6,7 +6,9 @@ pipeline {
             steps {
                 script {
                     checkout scm
-                    githubNotify description: 'The build just start',  status: 'PENDING'
+                    githubNotify account: 'pipelineCake', context: 'Final Test', credentialsId: 'Github',
+                        description: 'This is an example', repo: 'Water', sha: GIT_COMMIT,
+                        status: 'PENDING', targetUrl: RUN_DISPLAY_URL
                 }
             }
         }
@@ -14,7 +16,9 @@ pipeline {
     post {
         always {
             script {
-                githubNotify description: 'The build is over',  status: 'SUCCESS'
+                githubNotify account: 'pipelineCake', context: 'Final Test', credentialsId: 'Github',
+                    description: 'This is an example', repo: 'Water', sha: GIT_COMMIT,
+                    status: 'SUCCESS', targetUrl: RUN_DISPLAY_URL
             }
         }
     }
