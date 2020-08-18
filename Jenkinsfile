@@ -5,6 +5,7 @@ pipeline {
         stage('Prepare Environment') {
             steps {
                 script {
+                    checkout scm
                     githubNotify description: 'The build just start',  status: 'PENDING'
                 }
             }
