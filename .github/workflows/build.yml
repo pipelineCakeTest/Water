@@ -33,7 +33,7 @@ jobs:
       - name: Build
         run: conan create .
       - name: Upload
-        run: conan upload aev25/stable -r conan_repo --all
+        run: conan upload ${{ github.event.repository.name }}/0.1.0@aev25/stable -r conan_repo --all
       - name: Get build info
         run: |
           conan_build_info $CONAN_TRACE_FILE --output ./build_info.json
