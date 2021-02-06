@@ -1,0 +1,26 @@
+name: Integration Test
+on:
+  repository_dispatch:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: "Labels: Test"
+    env:
+      JOB_NAME: ${{ github.repository }}
+      BUILD_NUMBER: ${{ github.run_number }}
+      CONAN_USER_HOME: ${{ github.workspace }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Conan
+        uses: turtlebrowser/get-conan@v1.0
+      - name: Checkout
+        uses: actions/checkout@v2.3.1
+      - name: Conan Config
+        run: |
+          conan remote add conan_repo ${{ secrets.ARTIFACTORY_REPOSITORY }} -i 0 -f
+          conan user -p ${{ secrets.ARTIFACTORY_PASSWORD }} -r conan_repo ${{ secrets.ARTIFACTORY_USERNAME }}
+      - name: Build
+        run: |
+          conan create .
+          conan upload {{github.repository.name}}/0.1.0@aev25/stable -r conan_repo --all
