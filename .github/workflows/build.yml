@@ -10,7 +10,6 @@ jobs:
       JOB_NAME: ${{ github.repository }}
       BUILD_NUMBER: ${{ github.run_number }}
       CONAN_USER_HOME: ${{ github.workspace }}
-      CONAN_TRACE_FILE : ${{ github.workspace }}/traces.log
     runs-on: ubuntu-latest
     steps:
       - name: Get Time
@@ -27,34 +26,17 @@ jobs:
         run: |
           conan remote add conan_repo ${{ secrets.ARTIFACTORY_REPOSITORY }}/artifactory/api/conan/conan-test -i 0 -f
           conan user -p ${{ secrets.ARTIFACTORY_PASSWORD }} -r conan_repo ${{ secrets.ARTIFACTORY_USERNAME }}
-          conan config set artifact_property_build.name=${{ github.repository }}
+          conan config set artifact_property_build.name=${{ github.event.repository.name }}
           conan config set artifact_property_build.number=${{ github.run_number }}
           conan config set artifact_property_build.timestamp=${{ steps.time.outputs.time }}
       - name: Build
-        run: conan create .
+        run: |
+          conan_build_info --v2 start ${{ github.event.repository.name }} ${{ github.run_number }}
+          conan lock create conanfile.py --user=aev25 --channel=stable --lockfile-out=conan_temp.lock
+          conan create . --lockfile=conan_temp.lock --lockfile-out=conan.lock
       - name: Upload
         run: conan upload ${{ github.event.repository.name }}/0.1.0@aev25/stable -r conan_repo --all
-      - name: Get build info
+      - name: Build info
         run: |
-          conan_build_info $CONAN_TRACE_FILE --output ./build_info.json
-      - name: Update build info
-        uses: deef0000dragon1/json-edit-action/@v1
-        env:
-          FILE: ./build_info.json
-          KEY: name
-          VALUE: ${{ github.event.repository.name }}
-      - name: Update build info 2
-        uses: deef0000dragon1/json-edit-action/@v1
-        env:
-          FILE: ./build_info.json
-          KEY: started
-          VALUE: ${{ steps.time.outputs.time }}
-      - name: Update build info 3
-        uses: deef0000dragon1/json-edit-action/@v1
-        env:
-          FILE: ./build_info.json
-          KEY: number
-          VALUE: ${{ github.run_number }}
-      - name: Upload build info
-        run: |
-          curl -X PUT -u ${{ secrets.ARTIFACTORY_USERNAME }}:${{ secrets.ARTIFACTORY_PASSWORD }} -H "Content-type: application/json" -T ./build_info.json "${{ secrets.ARTIFACTORY_REPOSITORY }}/artifactory/api/build"
+          conan_build_info --v2 create buildinfo.json --lockfile conan.lock --user ${{ secrets.ARTIFACTORY_USERNAME }} --password ${{ secrets.ARTIFACTORY_PASSWORD }}
+          conan_build_info --v2 publish buildinfo.json --url ${{ secrets.ARTIFACTORY_REPOSITORY }}/artifactory --user ${{ secrets.ARTIFACTORY_USERNAME }} --password ${{ secrets.ARTIFACTORY_PASSWORD }}
